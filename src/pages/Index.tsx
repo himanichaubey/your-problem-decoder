@@ -8,17 +8,55 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { Lightbulb, Zap, Sparkles } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const Index = () => {
   const [problem, setProblem] = useState("");
   const [tone, setTone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Problem:", problem, "Tone:", tone);
-    // Handle submission logic here
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(
+        "https://swadhyay-clothing-01.app.n8n.cloud/webhook/6d8e71bc-9c26-4cf6-8027-82ba071e53a9",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            problem: problem.trim(),
+            tone: tone,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast({
+          title: "Escape route sent! 🚀",
+          description: "We're working on getting you outta there!",
+        });
+        setProblem("");
+        setTone("");
+      } else {
+        throw new Error("Failed to submit");
+      }
+    } catch (error) {
+      toast({
+        title: "Oops! Something went wrong",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -116,9 +154,9 @@ const Index = () => {
                 variant="hero"
                 size="xl"
                 className="w-full"
-                disabled={!problem.trim() || !tone}
+                disabled={!problem.trim() || !tone || isSubmitting}
               >
-                Get Me Outta Here! 🚪
+                {isSubmitting ? "Sending..." : "Get Me Outta Here! 🚪"}
               </Button>
             </form>
           </div>
